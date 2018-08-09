@@ -57,27 +57,25 @@ int main (){
 
     // Run Parameters
     string fileID;
-    int runType;
     int nPhotons;
 
-    // detection parameters
+    // system parameters
     double FOV;
-
-    // mie parameters
-    double nRe; // real refractive index
-    double nIm; // imaginary refractive index
-
-    // IOPs
-    double a; // absorption coefficient (m-1)
-    double b; // scattering coefficient (m-1)
-    double c; // attenuation coefficient (m-1)
-    double omega; // single scattering albedo
+    double lambda
 
     // Particle Size Distribution
-    double Dmin;
-    double Dmax;
-    double k;
-    double jungeSlope;
+
+    // Phytoplankton
+    double Dmin_phy;
+    double Dmax_phy;
+    double k_phy;
+    double jungeSlope_phy;
+
+    // Non-algal Particles
+    double Dmin_np;
+    double Dmax_np;
+    double k_np;
+    double jungeSlope_np;
 
     string photonFile("photon"); // first part of photon tracing filename
     string signalFile("signal"); // first part of signal trcking filename
@@ -88,49 +86,183 @@ int main (){
       getline(lidarMCinputCSV,dummyLine,','); // throw away variable description
       getline(lidarMCinputCSV,fileID,'\n'); // load fileID to name output files
       cout << fileID << endl;
-      getline(lidarMCinputCSV,dummyLine,','); // throw away variable description
-      getline(lidarMCinputCSV,temp,'\n'); // load runType into temporary variable
-      runType = stoi(temp); // store runType as an integer
+
       getline(lidarMCinputCSV,dummyLine,','); // throw away variable description
       getline(lidarMCinputCSV,temp,'\n'); // load # of photons to be run into temporary variable
       nPhotons = stoi(temp); // store number of photons as an integer
+
       getline(lidarMCinputCSV,dummyLine,','); // throw away variable description
       getline(lidarMCinputCSV,temp,'\n'); // load FOV into temporary variable
       FOV = stod(temp); // store FOV as a double
+
       getline(lidarMCinputCSV,dummyLine,','); // throw away variable description
       getline(lidarMCinputCSV,temp,'\n'); // load the real refractive index into temporary variable
-      nRe = stod(temp); // store the real refractive index as a double
-      getline(lidarMCinputCSV,dummyLine,','); // throw away variable description
-      getline(lidarMCinputCSV,temp,'\n'); // load imaginary refractive indes into temporary variable
-      nIm = stod(temp); // store the imaginary refractive index as a double
-
-      if (runType == 1){ // skip IOPs; calculated from Mie Theory
-      getline(lidarMCinputCSV,dummyLine,'\n'); // throw away variable description
-      getline(lidarMCinputCSV,dummyLine,'\n'); // load file  variable
-      }
-
-      else if (runType == 2){ // load IOPs; ignore Mie Calculations of IOPs
-      getline(lidarMCinputCSV,dummyLine,','); // throw away variable description
-      getline(lidarMCinputCSV,temp,'\n'); // load file  variable
-      a = stod(temp);
-      getline(lidarMCinputCSV,dummyLine,','); // load file  variable
-      getline(lidarMCinputCSV,temp,'\n'); // load file  variable
-      b = stod(temp);
-      }
+      lambda = stod(temp); // store the real refractive index as a double
 
       getline(lidarMCinputCSV,dummyLine,','); // throw away variable description
       getline(lidarMCinputCSV,temp,'\n'); // load file  variable
-      Dmin = stod(temp);
+      Dmin_phy = stod(temp);
+
       getline(lidarMCinputCSV,dummyLine,','); // throw away variable description
       getline(lidarMCinputCSV,temp,'\n'); // load file  variable
-      Dmax = stod(temp);
+      Dmax_phy = stod(temp);
+
       getline(lidarMCinputCSV,dummyLine,','); // throw away variable description
       getline(lidarMCinputCSV,temp,'\n'); // load file  variable
-      k = stod(temp);
+      k_phy = stod(temp);
+
       getline(lidarMCinputCSV,dummyLine,','); // throw away variable description
       getline(lidarMCinputCSV,temp,'\n'); // load file  variable
-      jungeSlope = stod(temp);
+      jungeSlope_phy = stod(temp);
+
+      getline(lidarMCinputCSV,dummyLine,','); // throw away variable description
+      getline(lidarMCinputCSV,temp,'\n'); // load file  variable
+      Dmin_np = stod(temp);
+
+      getline(lidarMCinputCSV,dummyLine,','); // throw away variable description
+      getline(lidarMCinputCSV,temp,'\n'); // load file  variable
+      Dmax_np = stod(temp);
+
+      getline(lidarMCinputCSV,dummyLine,','); // throw away variable description
+      getline(lidarMCinputCSV,temp,'\n'); // load file  variable
+      k_np = stod(temp);
+
+      getline(lidarMCinputCSV,dummyLine,','); // throw away variable description
+      getline(lidarMCinputCSV,temp,'\n'); // load file  variable
+      jungeSlope_np = stod(temp);
     }
+
+      ////////////////////////////////////////////////////////////
+     //// Phytoplankton Refractive Index File Parameters ////////
+    ////////////////////////////////////////////////////////////
+
+    vector <string> wavelength_phy_storage;
+    vector <string> nRe_phy_storage;
+    vector <string> nIm_phy_storage;
+
+    string wavelength_phy_str;
+    string nRe_phy_str;
+    string nIm_phy_str;
+
+    ifstream ref_phytoCSV("ref_phyto.csv"); // open up a file stream
+    if (ref_phytoCSV.is_open()){
+      while (ref_phytoCSV.good()){
+        getline(ref_phytoCSV,wavelength_phy_str,',');
+        getline(ref_phytoCSV,nRe_phy_str,',');
+        getline(ref_phytoCSV,nIm_phy_str,'\n');
+
+        wavelength_phy_storage.push_back(wavelength_phy_str);
+        nRe_phy_storage.push_back(nRe_phy_str);
+        nIm_phy_storage.push_back(nIm_phy_str);
+
+      }
+    }
+    else{
+      cout << "Error Opening" << endl;
+    }
+
+    double wavelength_phy[wavelength_phy_storage.size()];
+    double nRe_phy[nRe_phy_storage.size()];
+    double nIm_phy[nIm_phy_storage.size()];
+
+    for (int i = 0; i<wavelength_phy_storage.size()-1; i++){
+      wavelength_phy[i] = stod(wavelength_phy_storage[i]);
+      nRe_phy[i] = stod(nRe_phy_storage[i]);
+      nIm_phy[i] = stod(nIm_phy_storage[i]);
+    }
+
+
+
+      ///////////////////////////////////////////////////////
+     //// Non-Algal Refractive Index File Parameters ///////
+    ///////////////////////////////////////////////////////
+
+
+    vector <string> wavelength_np_storage;
+    vector <string> nRe_np_storage;
+    vector <string> nIm_np_storage;
+
+    string wavelength_np_str;
+    string nRe_np_str;
+    string nIm_np_str;
+
+    ifstream ref_npCSV("ref_np.csv"); // open up a file stream
+    if (ref_npCSV.is_open()){
+      while (ref_npCSV.good()){
+        getline(ref_npCSV,wavelength_np_str,',');
+        getline(ref_npCSV,nRe_np_str,',');
+        getline(ref_npCSV,nIm_np_str,'\n');
+
+        wavelength_np_storage.push_back(wavelength_np_str);
+        nRe_np_storage.push_back(nRe_np_str);
+        nIm_np_storage.push_back(nIm_np_str);
+
+      }
+    }
+    else{
+      cout << "Error Opening" << endl;
+    }
+
+    double wavelength_np[wavelength_np_storage.size()];
+    double nRe_np[nRe_np_storage.size()];
+    double nIm_np[nIm_np_storage.size()];
+
+    for (int i = 0; i<wavelength_np_storage.size()-1; i++){
+      wavelength_np[i] = stod(wavelength_np_storage[i]);
+      nRe_np[i] = stod(nRe_np_storage[i]);
+      nIm_np[i] = stod(nIm_np_storage[i]);
+
+      cout << wavelength_np[i] << endl;
+
+    }
+
+      /////////////////////////////
+     ////  CDOM absorption ///////
+    /////////////////////////////
+    //
+    // double ag;
+    //
+    // ifstream ag_inputCSV("ref_phyto.csv"); // open up a file stream
+
+      //////////////////////////
+     ////  Pope and Fry ///////
+    //////////////////////////
+
+    vector <string> wavelength_pandf_storage;
+    vector <string> aw_storage;
+
+    string wavelength_pandf_str;
+    string aw_str;
+
+    ifstream pandfCSV("pandf.csv"); // open up a file stream
+    if (pandfCSV.is_open()){
+      while (pandfCSV.good()){
+        getline(pandfCSV,wavelength_pandf_str,',');
+        getline(pandfCSV,aw_str,'\n');
+
+        wavelength_pandf_storage.push_back(wavelength_pandf_str);
+        aw_storage.push_back(aw_str);
+      }
+    }
+
+    else{
+      cout << "Error Opening" << endl;
+    }
+
+    double wavelength_pandf[wavelength_pandf_storage.size()];
+    double aw[aw_storage.size()];
+
+    for (int i = 0; i<wavelength_pandf_storage.size()-1; i++){
+      wavelength_pandf[i] = stod(wavelength_pandf_storage[i]);
+      aw[i] = stod(aw_storage[i]);
+      cout << aw[i] << endl;
+      }
+    }
+
+
+
+
+
       ///////////////////////////////////
      ///// Define Lidar Parameters /////
     ///////////////////////////////////
@@ -157,12 +289,24 @@ int main (){
      ///// Define Water Column Parameters//////
     //////////////////////////////////////////
 
+
+    // // mie parameters ///////////////////////////////////
+    // double nRe; // real refractive index
+    // double nIm; // imaginary refractive index
+    // /////////////////////////////////////////////////////
+    //
+    // // IOPs
+    // double a; // absorption coefficient (m-1)
+    // double b; // scattering coefficient (m-1)
+    // double c; // attenuation coefficient (m-1)
+    // double omega; // single scattering albedo
+
     // Mie Parameters //
     double refMed = 1.33; // Refractive Index of Water
     complex<double> refRel = complex<double>(nRe,nIm); // refRel stores the refractive index as a complex double
 
     // Wavelength
-    double lambda = 0.532; // lidar wavelength in a vaccuum (um)
+    double lambda = ; // lidar wavelength in a vaccuum (um)
     double lambdaMed = lambda/refMed; // Lidar Wavelength in Medium (um)
     double kMed = 2*pi/(lambdaMed*1e-6); // Lidar wavenumber in Medium; convert lambda to (m)
     // Angles
